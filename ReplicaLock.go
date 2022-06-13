@@ -70,7 +70,7 @@ func (RepLock *ReplicaLock) Lock(timeout int64, leaseTime int64, TimeUnit string
 	} else {
 		return errors.New("TimeUnit can only be \"s\" or \"ms\"")
 	}
-	ttl, err := RepLock.tryLockInner(timeout, leaseTime, getlockKeyName(RepLock))
+	ttl, err := RepLock.tryLockInner(timeout, leaseTime, getLockKeyName(RepLock))
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (RepLock *ReplicaLock) Lock(timeout int64, leaseTime int64, TimeUnit string
 		return nil
 	}
 	for {
-		ttl, err = RepLock.tryLockInner(timeout, leaseTime, getlockKeyName(RepLock))
+		ttl, err = RepLock.tryLockInner(timeout, leaseTime, getLockKeyName(RepLock))
 		if err != nil {
 			return err
 		}
@@ -130,7 +130,7 @@ func (RepLock *ReplicaLock) TryLock(waitTime int64, timeout int64, leaseTime int
 	} else {
 		return false, errors.New("TimeUnit can only be \"s\" or \"ms\"")
 	}
-	ttl, err := RepLock.tryLockInner(timeout, leaseTime, getlockKeyName(RepLock))
+	ttl, err := RepLock.tryLockInner(timeout, leaseTime, getLockKeyName(RepLock))
 	if err != nil {
 		return false, err
 	}
@@ -142,7 +142,7 @@ func (RepLock *ReplicaLock) TryLock(waitTime int64, timeout int64, leaseTime int
 		if currentTime-waitTime >= startTime {
 			break
 		}
-		ttl, err = RepLock.tryLockInner(timeout, leaseTime, getlockKeyName(RepLock))
+		ttl, err = RepLock.tryLockInner(timeout, leaseTime, getLockKeyName(RepLock))
 		if err != nil {
 			return false, err
 		}
@@ -175,7 +175,7 @@ func (RepLock *ReplicaLock) tryLockInner(waitTime int64, leaseTime int64, lockKe
 	if err != nil {
 		return -1, err
 	}
-	replyNum, err := waitforReplicas(RepLock, NumReplicas, waitTime)
+	replyNum, err := waitForReplicas(RepLock, NumReplicas, waitTime)
 	if err != nil {
 		return -1, err
 	}
@@ -204,7 +204,7 @@ func (RepLock *ReplicaLock) unlockInner() {
 		"redis.call('del', KEYS[1]); "+
 		"return 1; "+
 		"end; "+
-		"return nil;", 1, getRawName(RepLock), internalLeaseTime, getlockKeyName(RepLock))
+		"return nil;", 1, getRawName(RepLock), internalLeaseTime, getLockKeyName(RepLock))
 }
 
 // ForceUnlock forces the deletion of the key (if the key exists),
@@ -247,9 +247,9 @@ func getRawName(RepLock *ReplicaLock) string {
 	return defaultRawName
 }
 
-// lockKeyName format: "Prefix:Client_id:Goroutine_id"
+// lockKeyName format: "Prefix:uuid:Goroutine_id"
 // example : ReplicaLock:3:1
-func getlockKeyName(RepLock *ReplicaLock) string {
+func getLockKeyName(RepLock *ReplicaLock) string {
 	gid := goid.Get()
 	gidStr := strconv.FormatInt(gid, 10)
 	uidStr := uuid.NewV1().String()
@@ -275,12 +275,12 @@ func getNumReplicas(RepLock *ReplicaLock) (int64, error) {
 	return int64(len(param)), nil
 }
 
-// waitforReplicas execute the 'WAIT' command and try to wait for all replicas
+// waitForReplicas execute the 'WAIT' command and try to wait for all replicas
 // to finish synchronizing with the master node.
 // 'NumReplicas' is the number of replicas we require to be synchronized successfully,
 // here we require all replicas to be synchronized successfully to ensure that lock are not lost after failover.
 // 'timeout' is the maximum wait time.
-func waitforReplicas(RepLock *ReplicaLock, NumReplicas, timeout int64) (int64, error) {
+func waitForReplicas(RepLock *ReplicaLock, NumReplicas, timeout int64) (int64, error) {
 	raw, err := RepLock.conn.Do("wait", NumReplicas, timeout)
 	if err != nil {
 		return -1, err

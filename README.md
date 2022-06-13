@@ -11,7 +11,7 @@ The implementation is almost the same as that of RedissonLock.But ReplicaLock us
 
 An obvious problem about ReplicaLock: lock acquisition may fail due to network delay between master and slave.<br>
 
-This is to prevent lock loss after failover because the replicas does not complete synchronization with the master node.
+This is to prevent lock loss after failover because the replica has not yet completed synchronization with the master node.
 
 A simple example of using ReplicaLock:
 ```

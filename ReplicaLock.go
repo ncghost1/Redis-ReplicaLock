@@ -49,7 +49,7 @@ func (RepLock *ReplicaLock) SetRawKeyName(RawKeyName string) {
 // 'timeout' is the maximum time we wait for all replicas to finish synchronizing.
 // 'leaseTime' is the existence time of the lock.
 // TimeUnit is a unit of time for 'waitTime','timeout','leaseTime'.
-// Note that we will convert the input parameters to legal ranges.
+// Note that we will convert the input parameter to make it in the legal range.
 func (RepLock *ReplicaLock) Lock(timeout int64, leaseTime int64, TimeUnit string) error {
 	if leaseTime < 0 {
 		leaseTime = 0
@@ -96,7 +96,7 @@ func (RepLock *ReplicaLock) Lock(timeout int64, leaseTime int64, TimeUnit string
 // 'leaseTime' is the existence time of the lock.
 // TimeUnit is a unit of time for 'waitTime','timeout','leaseTime'.
 // the bool returned by Trylock tells the user whether the lock was successful(true) or not(false).
-// Note that we will convert the input parameters to legal ranges.
+// Note that we will convert the input parameter to make it in the legal range.
 func (RepLock *ReplicaLock) TryLock(waitTime int64, timeout int64, leaseTime int64, TimeUnit string) (bool, error) {
 	startTime := time.Now().UnixMilli()
 	if waitTime < 0 {

@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	INT64_MAX      = (1 << 63) - 1
-	DefaultRawName = "AnyReplicaLock"
-	Prefix         = "ReplicaLock:"
+	int64_MAX      = (1 << 63) - 1
+	defaultRawName = "AnyReplicaLock"
+	prefix         = "ReplicaLock:"
 )
 
 var (
@@ -56,13 +56,13 @@ func (RepLock *ReplicaLock) Lock(timeout int64, leaseTime int64, TimeUnit string
 	}
 	TimeUnit = strings.ToLower(TimeUnit)
 	if TimeUnit == "s" {
-		if timeout > INT64_MAX/1000 {
-			timeout = INT64_MAX
+		if timeout > int64_MAX/1000 {
+			timeout = int64_MAX
 		} else {
 			timeout = timeout * 1000
 		}
-		if leaseTime > INT64_MAX/1000 {
-			leaseTime = INT64_MAX
+		if leaseTime > int64_MAX/1000 {
+			leaseTime = int64_MAX
 		} else {
 			leaseTime = leaseTime * 1000
 		}
@@ -111,18 +111,18 @@ func (RepLock *ReplicaLock) TryLock(waitTime int64, timeout int64, leaseTime int
 
 	TimeUnit = strings.ToLower(TimeUnit)
 	if TimeUnit == "s" {
-		if waitTime > INT64_MAX/1000 {
-			waitTime = INT64_MAX
+		if waitTime > int64_MAX/1000 {
+			waitTime = int64_MAX
 		} else {
 			waitTime = waitTime * 1000
 		}
-		if timeout > INT64_MAX/1000 {
-			timeout = INT64_MAX
+		if timeout > int64_MAX/1000 {
+			timeout = int64_MAX
 		} else {
 			timeout = timeout * 1000
 		}
-		if leaseTime > INT64_MAX/1000 {
-			leaseTime = INT64_MAX
+		if leaseTime > int64_MAX/1000 {
+			leaseTime = int64_MAX
 		} else {
 			leaseTime = leaseTime * 1000
 		}
@@ -244,7 +244,7 @@ func getRawName(RepLock *ReplicaLock) string {
 	if RepLock.rawKeyName != "" {
 		return RepLock.rawKeyName
 	}
-	return DefaultRawName
+	return defaultRawName
 }
 
 // lockKeyName format: "Prefix:Client_id:Goroutine_id"
@@ -253,7 +253,7 @@ func getlockKeyName(RepLock *ReplicaLock) string {
 	gid := goid.Get()
 	gidStr := strconv.FormatInt(gid, 10)
 	uidStr := uuid.NewV1().String()
-	return Prefix + uidStr + ":" + gidStr
+	return prefix + uidStr + ":" + gidStr
 }
 
 // getNumReplicas get the number of replicas

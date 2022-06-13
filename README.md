@@ -1,5 +1,6 @@
 # Redis-ReplicaLock
-A distributed lock idea implemented by redis and golang.It is more secure than a simple redis distributed lock.It is still in the experimental stage.<br>
+A distributed lock idea implemented by redis and golang.It is more secure than a simple redis distributed lock.<br>
+It is still in the experimental stage.<br>
 
 Welcome to testing ReplicaLock:
 ```
@@ -15,7 +16,7 @@ This is to prevent lock loss after failover because the replicas does not comple
 A simple example of using ReplicaLock:
 ```
 func main() {
-    // We use "redigo" to connect to redis
+    	// We use "redigo" to connect to redis
 	Conn, err := redis.Dial("tcp", ":6379")
 	if err != nil {
 		panic(err)
@@ -25,7 +26,7 @@ func main() {
 		panic(err)
 	}
 
-    // 'WAIT' Command 'timeout' is 1s, ReplicaLock's lease time is 30s.
+    	// 'WAIT' Command 'timeout' is 1s, ReplicaLock's lease time is 30s.
 	err = Replock.Lock(1, 30, "s")
 	if err != nil {
 		panic(err)

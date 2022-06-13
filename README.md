@@ -1,5 +1,5 @@
 # Redis-ReplicaLock
-A distributed lock idea implemented by redis and displayed in go language.It is more secure than a simple redis distributed lock.It is still in the experimental stage.<br>
+A distributed lock idea implemented by redis and golang.It is more secure than a simple redis distributed lock.It is still in the experimental stage.<br>
 
 Welcome to testing ReplicaLock:
 ```

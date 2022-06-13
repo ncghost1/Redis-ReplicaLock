@@ -248,7 +248,7 @@ func getRawName(RepLock *ReplicaLock) string {
 }
 
 // lockKeyName format: "Prefix:uuid:Goroutine_id"
-// example : ReplicaLock:3:1
+// example : ReplicaLock:2c1bf9da-eaff-11ec-b3bb-00ff52094b18:1
 func getLockKeyName(RepLock *ReplicaLock) string {
 	gid := goid.Get()
 	gidStr := strconv.FormatInt(gid, 10)

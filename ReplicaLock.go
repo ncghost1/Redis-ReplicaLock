@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	internalLeaseTime     = int64(30000) // Default is 30000ms,but we never use the default value in the implementation.
+	internalLeaseTime     = int64(30000) // Default is 30000ms,but we not use the default value in the current implementation.
 	renewExpirationOption = false        // Default is disabled
 )
 
@@ -29,7 +29,6 @@ type ReplicaLock struct {
 
 // New return a ReplicaLock.
 func New(Conn redis.Conn) (ReplicaLock, error) {
-
 	return ReplicaLock{rawKeyName: "", conn: Conn}, nil
 }
 
@@ -49,7 +48,7 @@ func (RepLock *ReplicaLock) SetRawKeyName(RawKeyName string) {
 // 'timeout' is the maximum time we wait for all replicas to finish synchronizing.
 // 'leaseTime' is the existence time of the lock.
 // TimeUnit is a unit of time for 'waitTime','timeout','leaseTime'.
-// Note that we will convert the input parameter to make it in the legal range.
+// Note that we will convert the input parameters to make it in the legal range.
 func (RepLock *ReplicaLock) Lock(timeout int64, leaseTime int64, TimeUnit string) error {
 	if leaseTime < 0 {
 		leaseTime = 0
@@ -70,7 +69,7 @@ func (RepLock *ReplicaLock) Lock(timeout int64, leaseTime int64, TimeUnit string
 	} else {
 		return errors.New("TimeUnit can only be \"s\" or \"ms\"")
 	}
-	ttl, err := RepLock.tryLockInner(timeout, leaseTime, getLockKeyName(RepLock))
+	ttl, err := RepLock.tryLockInner(timeout, leaseTime, getLockKeyName())
 	if err != nil {
 		return err
 	}
@@ -78,7 +77,7 @@ func (RepLock *ReplicaLock) Lock(timeout int64, leaseTime int64, TimeUnit string
 		return nil
 	}
 	for {
-		ttl, err = RepLock.tryLockInner(timeout, leaseTime, getLockKeyName(RepLock))
+		ttl, err = RepLock.tryLockInner(timeout, leaseTime, getLockKeyName())
 		if err != nil {
 			return err
 		}
@@ -96,7 +95,7 @@ func (RepLock *ReplicaLock) Lock(timeout int64, leaseTime int64, TimeUnit string
 // 'leaseTime' is the existence time of the lock.
 // TimeUnit is a unit of time for 'waitTime','timeout','leaseTime'.
 // the bool returned by Trylock tells the user whether the lock was successful(true) or not(false).
-// Note that we will convert the input parameter to make it in the legal range.
+// Note that we will convert the input parameters to make it in the legal range.
 func (RepLock *ReplicaLock) TryLock(waitTime int64, timeout int64, leaseTime int64, TimeUnit string) (bool, error) {
 	startTime := time.Now().UnixMilli()
 	if waitTime < 0 {
@@ -130,7 +129,7 @@ func (RepLock *ReplicaLock) TryLock(waitTime int64, timeout int64, leaseTime int
 	} else {
 		return false, errors.New("TimeUnit can only be \"s\" or \"ms\"")
 	}
-	ttl, err := RepLock.tryLockInner(timeout, leaseTime, getLockKeyName(RepLock))
+	ttl, err := RepLock.tryLockInner(timeout, leaseTime, getLockKeyName())
 	if err != nil {
 		return false, err
 	}
@@ -142,7 +141,7 @@ func (RepLock *ReplicaLock) TryLock(waitTime int64, timeout int64, leaseTime int
 		if currentTime-waitTime >= startTime {
 			break
 		}
-		ttl, err = RepLock.tryLockInner(timeout, leaseTime, getLockKeyName(RepLock))
+		ttl, err = RepLock.tryLockInner(timeout, leaseTime, getLockKeyName())
 		if err != nil {
 			return false, err
 		}
@@ -189,11 +188,14 @@ func (RepLock *ReplicaLock) tryLockInner(waitTime int64, leaseTime int64, lockKe
 }
 
 func (RepLock *ReplicaLock) Unlock() {
-	RepLock.unlockInner()
+	err := RepLock.unlockInner()
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
-func (RepLock *ReplicaLock) unlockInner() {
-	RepLock.conn.Do("eval", "if (redis.call('hexists', KEYS[1], ARGV[2]) == 0) then "+
+func (RepLock *ReplicaLock) unlockInner() error {
+	_, err := RepLock.conn.Do("eval", "if (redis.call('hexists', KEYS[1], ARGV[2]) == 0) then "+
 		"return nil;"+
 		"end; "+
 		"local counter = redis.call('hincrby', KEYS[1], ARGV[2], -1); "+
@@ -204,7 +206,8 @@ func (RepLock *ReplicaLock) unlockInner() {
 		"redis.call('del', KEYS[1]); "+
 		"return 1; "+
 		"end; "+
-		"return nil;", 1, getRawName(RepLock), internalLeaseTime, getLockKeyName(RepLock))
+		"return nil;", 1, getRawName(RepLock), internalLeaseTime, getLockKeyName())
+	return err
 }
 
 // ForceUnlock forces the deletion of the key (if the key exists),
@@ -249,7 +252,7 @@ func getRawName(RepLock *ReplicaLock) string {
 
 // lockKeyName format: "Prefix:uuid:Goroutine_id"
 // example : ReplicaLock:2c1bf9da-eaff-11ec-b3bb-00ff52094b18:1
-func getLockKeyName(RepLock *ReplicaLock) string {
+func getLockKeyName() string {
 	gid := goid.Get()
 	gidStr := strconv.FormatInt(gid, 10)
 	uidStr := uuid.NewV1().String()

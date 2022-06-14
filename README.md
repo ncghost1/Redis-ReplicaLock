@@ -7,9 +7,9 @@ Welcome to testing ReplicaLock:
 go get github.com/ncghost1/Redis-ReplicaLock
 ```
 
-The implementation is almost the same as that of RedissonLock.But "pubsub" is not used here. In RedissonLock, a unlocked message is sent through the channel to the thread that has not acquired the lock.The implementation here simply makes a loop to try to acquire the lock.The most important differences is ReplicaLock uses the "WAIT" command to wait for all replicas to synchronize.When all replicas have completed writing the lock key, then we think we acquire the lock.<br>
+The implementation is almost the same as that of RedissonLock,but "pubsub" is not used here. In RedissonLock, a unlocked message is sent through the channel to the thread that has not acquired the lock.The implementation here simply makes a loop to try to acquire the lock.The most important differences is ReplicaLock uses the "WAIT" command to wait for all replicas to synchronize.When all replicas have completed writing the lock key, then we think we acquire the lock.<br>
 
-An obvious problem about ReplicaLock: lock acquisition may fail due to network delay between master and slave.<br>
+An obvious problem about ReplicaLock: lock acquisition may fail due to network delay between master and replica.<br>
 
 This is to prevent lock loss after failover because the replica has not yet completed synchronization with the master node.
 

@@ -297,7 +297,7 @@ func waitForReplicas(RepLock *ReplicaLock, NumReplicas, timeout int64) (int64, e
 
 // SetRenewExpirationOption
 // Enabled renewExpiration if 'option' is true.
-// Disabled renewExpiration if 'option' is true.
+// Disabled renewExpiration if 'option' is false.
 func SetRenewExpirationOption(option bool) {
 	renewExpirationOption = option
 }

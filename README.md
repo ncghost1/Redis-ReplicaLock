@@ -11,7 +11,7 @@ The implementation is almost the same as that of RedissonLock,but "pubsub" is no
 
 The following is an abstract example of a client successfully acquiring replicalock:
 ![](https://s2.loli.net/2022/06/15/oXQ87ZdbcaNAjxV.png)
-Because redis currently does not support the use of the "WAIT" command in lua scripts,we can only send the "WAIT" command to the redis master node after setting the lock successfully.
+Because redis currently does not support the use of the "WAIT" command in lua scripts,we can only send the "WAIT" command to the redis master node after setting the lock successfully.I know that the current implementation may be a little weird, but I just want to show this idea.
 
 An obvious problem about ReplicaLock: lock acquisition may fail due to network delay between master and replica, or the replicas is blocked due to slow query and cannot be synchronized.<br>
 

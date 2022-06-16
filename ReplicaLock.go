@@ -263,11 +263,11 @@ func getRawName(RepLock *ReplicaLock) string {
 
 // lockKeyName format: "Prefix:uuid:Goroutine_id"
 // example : ReplicaLock:2c1bf9da-eaff-11ec-b3bb-00ff52094b18:1
-func (ReplicaLock *ReplicaLock) generateLockKeyName() {
+func (RepLock *ReplicaLock) generateLockKeyName() {
 	gid := goid.Get()
 	gidStr := strconv.FormatInt(gid, 10)
 	uidStr := uuid.NewV1().String()
-	ReplicaLock.lockKeyName = prefix + uidStr + ":" + gidStr
+	RepLock.lockKeyName = prefix + uidStr + ":" + gidStr
 }
 
 func (RepLock *ReplicaLock) getLockKeyName() string {

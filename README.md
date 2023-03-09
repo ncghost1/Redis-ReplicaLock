@@ -38,3 +38,6 @@ func main() {
 	Replock.Unlock()
 }
 ```
+
+
+中文介绍（Blog）：https://www.eririspace.cn/2022/06/19/ReplicaLock/

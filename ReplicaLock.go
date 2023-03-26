@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	internalLeaseTime     = int64(30000) // Default is 30000ms,but we not use the default value in the current implementation.
+	internalLeaseTime     = int64(30000) // Default is 30000ms, but we not use the default value in the current implementation.
 	renewExpirationOption = false        // Default is disabled
 )
 
@@ -99,7 +99,6 @@ func (RepLock *ReplicaLock) Lock(timeout int64, leaseTime int64, TimeUnit string
 // the bool returned by Trylock tells the user whether the lock was successful(true) or not(false).
 // Note that we will convert the input parameters to make it in the legal range.
 func (RepLock *ReplicaLock) TryLock(waitTime int64, timeout int64, leaseTime int64, TimeUnit string) (bool, error) {
-	startTime := time.Now().UnixMilli()
 	if waitTime < 0 {
 		waitTime = 0
 	}
@@ -131,6 +130,7 @@ func (RepLock *ReplicaLock) TryLock(waitTime int64, timeout int64, leaseTime int
 	} else {
 		return false, errors.New("TimeUnit can only be \"s\" or \"ms\"")
 	}
+
 	RepLock.generateLockKeyName()
 	ttl, err := RepLock.tryLockInner(timeout, leaseTime, RepLock.getLockKeyName())
 	if err != nil {
@@ -139,20 +139,25 @@ func (RepLock *ReplicaLock) TryLock(waitTime int64, timeout int64, leaseTime int
 	if ttl == nil {
 		return true, nil
 	}
+
+	t := time.NewTimer(time.Millisecond * time.Duration(leaseTime))
 	for {
-		currentTime := time.Now().UnixMilli()
-		if currentTime-waitTime >= startTime {
-			break
+		select {
+		case <-t.C:
+			goto timeout
+		default:
+			ttl, err = RepLock.tryLockInner(timeout, leaseTime, RepLock.getLockKeyName())
+			if err != nil {
+				return false, err
+			}
+			if ttl == nil {
+				return true, nil
+			}
+			time.Sleep(time.Millisecond)
 		}
-		ttl, err = RepLock.tryLockInner(timeout, leaseTime, RepLock.getLockKeyName())
-		if err != nil {
-			return false, err
-		}
-		if ttl == nil {
-			return true, nil
-		}
-		time.Sleep(time.Millisecond)
 	}
+
+timeout:
 	return false, nil
 }
 
@@ -339,7 +344,7 @@ func (RepLock *ReplicaLock) renewExpirationInner(lockKeyName string) (bool, erro
 		"redis.call('pexpire', KEYS[1], ARGV[1]); "+
 		"return 1; "+
 		"end; "+
-		"return 0;", 1, getRawName(RepLock), internalLeaseTime, lockKeyName)
+		"return 0; ", 1, getRawName(RepLock), internalLeaseTime, lockKeyName)
 	if err != nil {
 		return false, err
 	}
